@@ -1,0 +1,43 @@
+name: Daily Scheduled Commit
+
+on:
+  # Schedule the workflow to run once per day at a specific time (12:34 AM UTC)
+  schedule:
+    - cron: '34 0 * * *' 
+  # Allows manual triggering for testing the initial run
+  workflow_dispatch:
+
+jobs:
+  daily-commit-job:
+    runs-on: ubuntu-latest
+    
+    steps:
+      # Step 1: Checkout the repository code
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          # Required for creating a commit using the token
+          token: ${{ secrets.GITHUB_TOKEN }} 
+
+      # Step 2: Set up the environment for commit
+      # The step name must include the specific email address
+      - name: Configure Git for 24f2006872@ds.study.iitm.ac.in
+        run: |
+          # Configure Git user details for the commit
+          git config user.name github-actions[bot]
+          git config user.email github-actions[bot]@users.noreply.github.com
+
+      # Step 3: Create or modify a file to ensure a change is detected
+      - name: Create Daily Timestamp File
+        run: |
+          # Create a file with the current UTC timestamp
+          echo "Last run at: $(date -u +'%Y-%m-%dT%H:%M:%SZ')" > daily_run_timestamp.txt
+          # The date should be within 5 minutes of the actual run time
+
+      # Step 4: Commit and Push the changes
+      - name: Commit and Push Changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          # The committed message clearly indicates the purpose and author
+          commit_message: 'Automated daily commit by workflow 🤖'
+          file_pattern: 'daily_run_timestamp.txt'
